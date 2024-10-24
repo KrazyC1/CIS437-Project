@@ -27,7 +27,7 @@ const BlockPlacer = () => {
   const handleSubmitScore = () => {
     const score = blocks.length;
 
-    fetch('http://localhost:5000/submit-score', {
+    fetch('https://cis437hw5.uk.r.appspot.com/submit-score', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
