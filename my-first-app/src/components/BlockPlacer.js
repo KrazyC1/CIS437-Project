@@ -2,17 +2,21 @@ import React, { useState, useRef } from 'react';
 
 const BlockPlacer = () => {
   const [blocks, setBlocks] = useState([]);
+  const [selectedColor, setSelectedColor] = useState(null); // Start with no color selected
   const [draggedBlock, setDraggedBlock] = useState(null);
   const containerRef = useRef(null);
   const blockSize = 32, blockOffset = blockSize / 2;
 
-  const handleClick = (e) => {
-    if (draggedBlock) return;
+  const colors = ['red', 'blue', 'green', 'yellow', 'purple'];
+
+  const handleCanvasClick = (e) => {
+    if (!selectedColor || draggedBlock) return; // Ensure a color is selected
+
     const { left, top } = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - left, y = e.clientY - top;
 
     if (isWithinBounds(x, y) && !isOverlapping(x, y))
-      setBlocks([...blocks, { x, y, id: Date.now() }]);
+      setBlocks([...blocks, { x, y, id: Date.now(), color: selectedColor }]);
   };
 
   const handleMouseMove = (e) => {
@@ -46,13 +50,27 @@ const BlockPlacer = () => {
 
   return (
     <div>
+      <div style={{ display: 'flex', marginBottom: '10px' }}>
+        {colors.map((color) => (
+          <div
+            key={color}
+            onClick={() => setSelectedColor(color)}
+            style={{
+              width: '32px', height: '32px', backgroundColor: color, cursor: 'pointer',
+              border: selectedColor === color ? '2px solid black' : '1px solid #ccc',
+              marginRight: '5px'
+            }}
+          />
+        ))}
+      </div>
+
       <div
         ref={containerRef}
         style={{
           position: 'relative', width: '100%', height: '400px', border: '2px solid #ccc',
           cursor: draggedBlock ? 'grabbing' : 'crosshair',
         }}
-        onClick={handleClick}
+        onClick={handleCanvasClick}
         onMouseMove={handleMouseMove}
         onMouseUp={() => setDraggedBlock(null)}
         onMouseLeave={() => setDraggedBlock(null)}
@@ -62,7 +80,7 @@ const BlockPlacer = () => {
             key={block.id}
             style={{
               position: 'absolute', width: blockSize, height: blockSize,
-              backgroundColor: 'white', left: block.x - blockOffset, top: block.y - blockOffset,
+              backgroundColor: block.color, left: block.x - blockOffset, top: block.y - blockOffset,
               border: '1px solid black', cursor: 'grab', userSelect: 'none',
             }}
             onMouseDown={(e) => { e.stopPropagation(); setDraggedBlock(block); }}
@@ -72,6 +90,7 @@ const BlockPlacer = () => {
           Blocks placed: {blocks.length}
         </div>
       </div>
+
       <button
         style={{
           marginTop: '20px', padding: '10px 20px', fontSize: '16px',
