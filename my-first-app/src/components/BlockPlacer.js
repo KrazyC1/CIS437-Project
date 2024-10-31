@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 
 const BlockPlacer = () => {
   const [blocks, setBlocks] = useState([]);
-  const [selectedLabel, setSelectedLabel] = useState(null);
   const [draggedBlock, setDraggedBlock] = useState(null);
   const containerRef = useRef(null);
   const contextRef = useRef(null);
@@ -25,21 +24,27 @@ const BlockPlacer = () => {
     { text: "Earth🌍", color: "white" }
   ];
 
-  const handleCanvasClick = (e) => {
-    if (!selectedLabel || draggedBlock) return;
-    const { left, top } = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - left, y = e.clientY - top;
-    const { width, height } = calculateBlockSize(selectedLabel.text);
-    if (isWithinBounds(x, y, width, height) && !isOverlapping(x, y, width, height))
-      setBlocks([...blocks, { x, y, id: Date.now(), label: selectedLabel, width, height }]);
+  const addBlockAtRandomPosition = (label) => {
+    const { width, height } = calculateBlockSize(label.text);
+    let x, y;
+
+    // Try up to 100 times to place the block at a non-overlapping position
+    for (let i = 0; i < 100; i++) {
+      x = Math.random() * (containerRef.current.offsetWidth - width) + width / 2;
+      y = Math.random() * (containerRef.current.offsetHeight - height) + height / 2;
+
+      if (!isOverlapping(x, y, width, height)) {
+        setBlocks([...blocks, { x, y, id: Date.now(), label, width, height }]);
+        return;
+      }
+    }
   };
 
   const handleMouseMove = (e) => {
     if (!draggedBlock) return;
     const { left, top } = containerRef.current.getBoundingClientRect();
     const newX = e.clientX - left, newY = e.clientY - top;
-    if (isWithinBounds(newX, newY, draggedBlock.width, draggedBlock.height) &&
-        !isOverlapping(newX, newY, draggedBlock.width, draggedBlock.height, draggedBlock.id))
+    if (isWithinBounds(newX, newY, draggedBlock.width, draggedBlock.height))
       setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x: newX, y: newY } : b)));
   };
 
@@ -71,12 +76,11 @@ const BlockPlacer = () => {
         {labels.map((label) => (
           <div
             key={label.text}
-            onClick={() => setSelectedLabel(label)}
+            onClick={() => addBlockAtRandomPosition(label)}
             style={{
               padding: '0 8px', height: '32px', display: 'flex', alignItems: 'center',
               backgroundColor: label.color, cursor: 'pointer',
-              border: selectedLabel === label ? '2px solid black' : '1px solid #ccc',
-              marginRight: '5px', color: 'black'
+              border: '1px solid #ccc', marginRight: '5px', color: 'black'
             }}
           >
             {label.text}
@@ -89,7 +93,6 @@ const BlockPlacer = () => {
           position: 'relative', width: '100%', height: '400px', border: '2px solid #ccc',
           cursor: draggedBlock ? 'grabbing' : 'crosshair',
         }}
-        onClick={handleCanvasClick}
         onMouseMove={handleMouseMove}
         onMouseUp={() => setDraggedBlock(null)}
         onMouseLeave={() => setDraggedBlock(null)}
