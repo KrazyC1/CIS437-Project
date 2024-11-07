@@ -8,7 +8,7 @@ function App() {
       <header className="App-header">
 
         <div style={{ padding: '20px' }}>
-        <h1 style={{ marginBottom: '20px' }}>Block Placer</h1>
+        <h1 style={{ marginBottom: '20px' }}>Essentia</h1>
         <BlockPlacer />
       </div>
 

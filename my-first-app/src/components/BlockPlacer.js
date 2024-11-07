@@ -17,10 +17,10 @@ const BlockPlacer = () => {
   };
 
   const labels = [
-    { text: "Water💧", color: "white" },
-    { text: "Fire🔥", color: "white" },
-    { text: "Wind💨", color: "white" },
-    { text: "Earth🌍", color: "white" }
+    { text: "Water💧", color: "#0077ff" },
+    { text: "Fire🔥", color: "#ff4d4d" },
+    { text: "Wind💨", color: "#66cc66" },
+    { text: "Earth🌍", color: "#8b5e3c" }
   ];
 
   const findOverlappingBlock = (x, y, id) => blocks.find(b => 
@@ -28,7 +28,6 @@ const BlockPlacer = () => {
   );
 
   const combineBlocks = async (x, y, targetBlock) => {
-    // Make a request to the Flask server to check if there's a combination
     const element1 = draggedBlock.label.text;
     const element2 = targetBlock.label.text;
 
@@ -36,7 +35,7 @@ const BlockPlacer = () => {
       const response = await fetch(`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`);
       const data = await response.json();
 
-      const newLabel = data.result ? { text: data.result, color: "white" } : { text: "⬜", color: "gray" };
+      const newLabel = data.result ? { text: data.result, color: "#FFD700" } : { text: "⬜", color: "gray" };
       const newBlock = {
         id: Date.now(),
         x: (x + targetBlock.x) / 2,
@@ -96,17 +95,19 @@ const BlockPlacer = () => {
   };
 
   return (
-    <div>
-      <div style={{ display: 'flex', marginBottom: '10px' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333', background: '#f5f5f5', padding: '20px' }}>
+      <div style={{ display: 'flex', marginBottom: '15px', gap: '10px' }}>
         {labels.map(label => (
           <div
             key={label.text}
             onClick={() => addBlockAtRandomPosition(label)}
             style={{
-              padding: '0 8px', height: '32px', display: 'flex', alignItems: 'center',
-              backgroundColor: label.color, cursor: 'pointer', border: '1px solid #ccc',
-              marginRight: '5px', color: 'black'
+              padding: '10px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center',
+              backgroundColor: label.color, cursor: 'pointer', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+              color: 'white', fontWeight: 'bold', transition: 'transform 0.2s'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
           >
             {label.text}
           </div>
@@ -115,8 +116,9 @@ const BlockPlacer = () => {
       <div
         ref={containerRef}
         style={{
-          position: 'relative', width: '100%', height: '400px', border: '2px solid #ccc',
-          cursor: draggedBlock ? 'grabbing' : 'crosshair'
+          position: 'relative', width: '100%', height: '400px', borderRadius: '10px', border: '2px solid #ddd',
+          backgroundColor: '#ffffff', overflow: 'hidden', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
+          cursor: draggedBlock ? 'grabbing' : 'crosshair', transition: 'background-color 0.3s ease-in-out'
         }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleDragEnd}
@@ -126,27 +128,32 @@ const BlockPlacer = () => {
           <div
             key={block.id}
             style={{
-              position: 'absolute', width: block.width, height: block.height,
+              position: 'absolute', width: block.width, height: block.height, borderRadius: '8px',
               backgroundColor: block.label.color, left: block.x - block.width / 2,
-              top: block.y - block.height / 2, border: '1px solid black', cursor: 'grab',
-              userSelect: 'none', color: 'black', display: 'flex', alignItems: 'center',
-              justifyContent: 'center', whiteSpace: 'nowrap'
+              top: block.y - block.height / 2, color: 'white', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', fontWeight: 'bold', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.15)',
+              transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'grab'
             }}
-            onMouseDown={e => { e.stopPropagation(); setDraggedBlock(block); }}
+            onMouseDown={(e) => { e.stopPropagation(); setDraggedBlock(block); }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
           >
             {block.label.text}
           </div>
         ))}
-        <div style={{ position: 'absolute', bottom: '8px', right: '8px', color: '#666' }}>
+        <div style={{ position: 'absolute', bottom: '10px', right: '10px', color: '#666' }}>
           Blocks placed: {blocks.length}
         </div>
       </div>
       <button
         style={{
-          marginTop: '20px', padding: '10px 20px', fontSize: '16px',
-          backgroundColor: '#28a745', color: 'white', border: 'none', cursor: 'pointer'
+          marginTop: '20px', padding: '12px 25px', fontSize: '16px', borderRadius: '8px',
+          backgroundColor: '#28a745', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer',
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.3s ease-in-out'
         }}
         onClick={handleSubmitScore}
+        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
+        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
       >
         SUBMIT SCORE
       </button>
