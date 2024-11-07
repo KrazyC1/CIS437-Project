@@ -57,7 +57,7 @@ def get_element_combination(element1, element2):
 
 # Example usage:
 # Add a new element combination
-add_element_combination("Mud💩", "Fire🔥", "Brick🧱")
+add_element_combination("Fire🔥", "Wind💨", "Smoke🚬")
 
 # Retrieve an element combination by elements
 combination_data = get_element_combination("Mud💩", "Fire🔥")
