@@ -11,11 +11,6 @@ const BlockPlacer = () => {
     contextRef.current.font = "16px Arial";
   }, []);
 
-  const calculateBlockSize = (text) => {
-    const textWidth = contextRef.current.measureText(text).width;
-    return { width: textWidth + 36, height: 40 };
-  };
-
   const labels = [
     { text: "Water💧", color: "#0077ff" },
     { text: "Fire🔥", color: "#ff4d4d" },
@@ -23,46 +18,45 @@ const BlockPlacer = () => {
     { text: "Earth🌍", color: "#8b5e3c" }
   ];
 
-  const hexToRgb = (hex) => {
-    let bigint = parseInt(hex.slice(1), 16);
-    return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
-  };
+  const hexToRgb = (hex) => ({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  });
 
-  const rgbToHex = (rgb) => {
-    return (
-      "#" +
-      ((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b).toString(16).slice(1)
-    );
-  };
+  const rgbToHex = (r, g, b) =>
+    `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
 
   const averageColors = (color1, color2) => {
     const rgb1 = hexToRgb(color1);
     const rgb2 = hexToRgb(color2);
-    const avgRgb = {
-      r: Math.round((rgb1.r + rgb2.r) / 2),
-      g: Math.round((rgb1.g + rgb2.g) / 2),
-      b: Math.round((rgb1.b + rgb2.b) / 2),
-    };
-    return rgbToHex(avgRgb);
+    return rgbToHex(
+      Math.round((rgb1.r + rgb2.r) / 2),
+      Math.round((rgb1.g + rgb2.g) / 2),
+      Math.round((rgb1.b + rgb2.b) / 2)
+    );
   };
 
-  const findOverlappingBlock = (x, y, id) => blocks.find(b => 
-    b.id !== id && Math.abs(b.x - x) < 40 && Math.abs(b.y - y) < 40
-  );
+  const calculateBlockSize = (text) => ({
+    width: contextRef.current.measureText(text).width + 36,
+    height: 40,
+  });
+
+  const findOverlappingBlock = (x, y, id) =>
+    blocks.find(b => b.id !== id && Math.abs(b.x - x) < 40 && Math.abs(b.y - y) < 40);
 
   const combineBlocks = async (x, y, targetBlock) => {
-    const element1 = draggedBlock.label.text;
-    const element2 = targetBlock.label.text;
+    const { text: element1, color: color1 } = draggedBlock.label;
+    const { text: element2, color: color2 } = targetBlock.label;
 
     try {
-      const response = await fetch(`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`);
+      const response = await fetch(
+        `http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`
+      );
       const data = await response.json();
 
-      const newText = data.result ? data.result : "⬜";
-      const newColor = data.result
-        ? averageColors(draggedBlock.label.color, targetBlock.label.color)
-        : "gray";
-
+      const newText = data.result || "⬜";
+      const newColor = data.result ? averageColors(color1, color2) : "pink";
       const newBlock = {
         id: Date.now(),
         x: (x + targetBlock.x) / 2,
@@ -82,8 +76,9 @@ const BlockPlacer = () => {
     const { left, top } = containerRef.current.getBoundingClientRect();
     const x = e.clientX - left, y = e.clientY - top;
     const overlappingBlock = findOverlappingBlock(x, y, draggedBlock.id);
-    overlappingBlock ? combineBlocks(x, y, overlappingBlock) : 
-      setBlocks(blocks.map(b => b.id === draggedBlock.id ? { ...b, x, y } : b));
+    overlappingBlock
+      ? combineBlocks(x, y, overlappingBlock)
+      : setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x, y } : b)));
     setDraggedBlock(null);
   };
 
@@ -122,15 +117,15 @@ const BlockPlacer = () => {
   };
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333', background: '#f5f5f5', padding: '20px' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', color: '#333', background: '#f5f5f5', padding: '20px', userSelect: 'none' }}>
       <div style={{ display: 'flex', marginBottom: '15px', gap: '10px' }}>
         {labels.map(label => (
           <div
             key={label.text}
             onClick={() => addBlockAtRandomPosition(label)}
             style={{
-              padding: '10px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center',
-              backgroundColor: label.color, cursor: 'pointer', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+              padding: '10px 15px', borderRadius: '20px', backgroundColor: label.color,
+              cursor: 'pointer', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
               color: 'white', fontWeight: 'bold', transition: 'transform 0.2s'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
@@ -145,7 +140,7 @@ const BlockPlacer = () => {
         style={{
           position: 'relative', width: '100%', height: '400px', borderRadius: '10px', border: '2px solid #ddd',
           backgroundColor: '#ffffff', overflow: 'hidden', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
-          cursor: draggedBlock ? 'grabbing' : 'crosshair', transition: 'background-color 0.3s ease-in-out'
+          cursor: draggedBlock ? 'grabbing' : 'crosshair', userSelect: 'none'
         }}
         onMouseMove={handleMouseMove}
         onMouseUp={handleDragEnd}
@@ -159,7 +154,7 @@ const BlockPlacer = () => {
               backgroundColor: block.label.color, left: block.x - block.width / 2,
               top: block.y - block.height / 2, color: 'white', display: 'flex', alignItems: 'center',
               justifyContent: 'center', fontWeight: 'bold', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.15)',
-              transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'grab'
+              cursor: 'grab', userSelect: 'none', transition: 'transform 0.2s'
             }}
             onMouseDown={(e) => { e.stopPropagation(); setDraggedBlock(block); }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
@@ -176,7 +171,7 @@ const BlockPlacer = () => {
         style={{
           marginTop: '20px', padding: '12px 25px', fontSize: '16px', borderRadius: '8px',
           backgroundColor: '#28a745', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer',
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.3s ease-in-out'
+          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.3s'
         }}
         onClick={handleSubmitScore}
         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
