@@ -23,6 +23,29 @@ const BlockPlacer = () => {
     { text: "Earth🌍", color: "#8b5e3c" }
   ];
 
+  const hexToRgb = (hex) => {
+    let bigint = parseInt(hex.slice(1), 16);
+    return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+  };
+
+  const rgbToHex = (rgb) => {
+    return (
+      "#" +
+      ((1 << 24) + (rgb.r << 16) + (rgb.g << 8) + rgb.b).toString(16).slice(1)
+    );
+  };
+
+  const averageColors = (color1, color2) => {
+    const rgb1 = hexToRgb(color1);
+    const rgb2 = hexToRgb(color2);
+    const avgRgb = {
+      r: Math.round((rgb1.r + rgb2.r) / 2),
+      g: Math.round((rgb1.g + rgb2.g) / 2),
+      b: Math.round((rgb1.b + rgb2.b) / 2),
+    };
+    return rgbToHex(avgRgb);
+  };
+
   const findOverlappingBlock = (x, y, id) => blocks.find(b => 
     b.id !== id && Math.abs(b.x - x) < 40 && Math.abs(b.y - y) < 40
   );
@@ -35,13 +58,17 @@ const BlockPlacer = () => {
       const response = await fetch(`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`);
       const data = await response.json();
 
-      const newLabel = data.result ? { text: data.result, color: "#FFD700" } : { text: "⬜", color: "gray" };
+      const newText = data.result ? data.result : "⬜";
+      const newColor = data.result
+        ? averageColors(draggedBlock.label.color, targetBlock.label.color)
+        : "gray";
+
       const newBlock = {
         id: Date.now(),
         x: (x + targetBlock.x) / 2,
         y: (y + targetBlock.y) / 2,
-        label: newLabel,
-        ...calculateBlockSize(newLabel.text)
+        label: { text: newText, color: newColor },
+        ...calculateBlockSize(newText)
       };
 
       setBlocks(blocks.filter(b => b.id !== draggedBlock.id && b.id !== targetBlock.id).concat(newBlock));
