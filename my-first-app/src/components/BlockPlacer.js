@@ -27,15 +27,28 @@ const BlockPlacer = () => {
     b.id !== id && Math.abs(b.x - x) < 40 && Math.abs(b.y - y) < 40
   );
 
-  const combineBlocks = (x, y, targetBlock) => {
-    const newBlock = {
-      id: Date.now(),
-      x: (x + targetBlock.x) / 2,
-      y: (y + targetBlock.y) / 2,
-      label: { text: "⬜", color: "white" },
-      ...calculateBlockSize("⬜")
-    };
-    setBlocks(blocks.filter(b => b.id !== draggedBlock.id && b.id !== targetBlock.id).concat(newBlock));
+  const combineBlocks = async (x, y, targetBlock) => {
+    // Make a request to the Flask server to check if there's a combination
+    const element1 = draggedBlock.label.text;
+    const element2 = targetBlock.label.text;
+
+    try {
+      const response = await fetch(`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`);
+      const data = await response.json();
+
+      const newLabel = data.result ? { text: data.result, color: "white" } : { text: "⬜", color: "gray" };
+      const newBlock = {
+        id: Date.now(),
+        x: (x + targetBlock.x) / 2,
+        y: (y + targetBlock.y) / 2,
+        label: newLabel,
+        ...calculateBlockSize(newLabel.text)
+      };
+
+      setBlocks(blocks.filter(b => b.id !== draggedBlock.id && b.id !== targetBlock.id).concat(newBlock));
+    } catch (error) {
+      console.error("Error fetching combination:", error);
+    }
   };
 
   const handleDragEnd = (e) => {
