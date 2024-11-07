@@ -1,17 +1,14 @@
 import './App.css';
-import BlockPlacer from './components/BlockPlacer'
-
+import BlockPlacer from './components/BlockPlacer';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-
-        <div style={{ padding: '20px' }}>
-        <h1 style={{ marginBottom: '20px' }}>Essentia</h1>
-        <BlockPlacer />
-      </div>
-
+        <div className="content-container">
+          <h1 className="app-title">Essentia</h1>
+          <BlockPlacer />
+        </div>
       </header>
     </div>
   );

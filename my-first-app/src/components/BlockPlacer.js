@@ -138,7 +138,7 @@ const BlockPlacer = () => {
       <div
         ref={containerRef}
         style={{
-          position: 'relative', width: '100%', height: '400px', borderRadius: '10px', border: '2px solid #ddd',
+          position: 'relative', width: '100%', height: '20vw', borderRadius: '10px', border: '2px solid #ddd',
           backgroundColor: '#ffffff', overflow: 'hidden', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
           cursor: draggedBlock ? 'grabbing' : 'crosshair', userSelect: 'none'
         }}
