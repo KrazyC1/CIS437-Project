@@ -56,20 +56,6 @@ def get_element_combination(element1, element2):
         print(f"Error retrieving combination: {e}")
         return None
 
-# Route to add a new combination
-@app.route('/add_combination', methods=['POST'])
-def add_combination():
-    data = request.get_json()
-    element1 = data.get('element1')
-    element2 = data.get('element2')
-    result = data.get('result')
-    
-    if not all([element1, element2, result]):
-        return jsonify({"error": "Missing element1, element2, or result"}), 400
-    
-    add_element_combination(element1, element2, result)
-    return jsonify({"message": f"Combination {element1} + {element2} = {result} added successfully."})
-
 # Route to get an existing combination
 @app.route('/get_combination', methods=['GET'])
 def get_combination():
