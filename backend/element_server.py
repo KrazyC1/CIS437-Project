@@ -13,7 +13,7 @@ from vertexai.generative_models import (
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Allows all origins
+CORS(app)  # This enables CORS support
 
 # Initialize the Firebase Admin SDK
 cred = credentials.Certificate('cred.json')
@@ -33,7 +33,7 @@ MODEL_ID = "gemini-1.5-flash-002"
 example_model = GenerativeModel(
     MODEL_ID,
     system_instruction=[
-        "You will be given two elements/items, you will be crafting them together and outputting the combination of the two along with a single associated emoji or two if its a complex creation. Avoid using compound names and keep the new item simple. Here are some examples:"
+        "You will be given two elements/items, you will be crafting them together and outputting the combination of the two along with a single associated emoji or two if it's a complex creation. Avoid using compound names and keep the new item simple. Here are some examples:"
         "User input: Stone + Fire; Output: Lava🌋 "
         "User input: Palace + President; Output: White House🏛️"
         "User input: Water + Earth; Output: Mud💩"
@@ -56,6 +56,18 @@ safety_settings = {
     HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
     HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
 }
+
+# Handle CORS preflight requests
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "3600",
+        }
+        return "", 204, headers
 
 def add_element_combination(element1, element2, result):
     try:
@@ -115,11 +127,14 @@ def get_combination():
     combination_data = get_element_combination(element1, element2)
     
     if combination_data:
-        return jsonify(combination_data)
+        response = jsonify(combination_data)
     else:
-        # Generate a new combination using the AI if it doesn't exist
         ai_generated_result = generate_element_combination(element1, element2)
-        return jsonify({"element1": element1, "element2": element2, "result": ai_generated_result})
+        response = jsonify({"element1": element1, "element2": element2, "result": ai_generated_result})
+    
+    # Set CORS header in the response
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

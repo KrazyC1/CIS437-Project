@@ -3,3 +3,4 @@ Flask==3.0.3
 Flask_Cors==5.0.0
 google_cloud_aiplatform==1.71.1
 setuptools==65.5.0
+gunicorn
