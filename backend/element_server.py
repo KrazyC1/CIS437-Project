@@ -1,20 +1,62 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Import CORS
+from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, firestore
+import os
+import vertexai
+from vertexai.generative_models import (
+    GenerationConfig,
+    GenerativeModel,
+    HarmBlockThreshold,
+    HarmCategory,
+)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for the entire app
+CORS(app, resources={r"/*": {"origins": "*"}})  # Allows all origins
 
 # Initialize the Firebase Admin SDK
-cred = credentials.Certificate('cred.json')  # Replace with your actual path
+cred = credentials.Certificate('cred.json')
 firebase_admin.initialize_app(cred)
 
 # Create a Firestore client
 db = firestore.client()
 
-# Define a function to add a new element combination
+# Google Cloud configuration for Vertex AI
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "backend/ai-creds.json"
+PROJECT_ID = "homework4-440015"
+LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1")
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+# Initialize the generative model
+MODEL_ID = "gemini-1.5-flash-002"
+example_model = GenerativeModel(
+    MODEL_ID,
+    system_instruction=[
+        "You will be given two elements/items, you will be crafting them together and outputting the combination of the two along with a single associated emoji or two if its a complex creation. Avoid using compound names and keep the new item simple. Here are some examples:"
+        "User input: Stone + Fire; Output: Lava🌋 "
+        "User input: Palace + President; Output: White House🏛️"
+        "User input: Water + Earth; Output: Mud💩"
+    ],
+)
+
+# Set model parameters
+generation_config = GenerationConfig(
+    temperature=0.9,
+    top_p=1.0,
+    top_k=32,
+    candidate_count=1,
+    max_output_tokens=15,
+)
+
+# Set safety settings
+safety_settings = {
+    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+}
+
 def add_element_combination(element1, element2, result):
     try:
         combination_data = {
@@ -28,11 +70,8 @@ def add_element_combination(element1, element2, result):
     except Exception as e:
         print(f"Error adding combination: {e}")
 
-# Define a function to retrieve an element combination by the elements
 def get_element_combination(element1, element2):
-    """Tries to retrieve a combination in any order."""
     try:
-        # First check with the elements in the given order
         combination_id = f"{element1}_{element2}"
         combination_ref = db.collection('elements').document(combination_id)
         combination_doc = combination_ref.get()
@@ -40,7 +79,6 @@ def get_element_combination(element1, element2):
         if combination_doc.exists:
             return combination_doc.to_dict()
         
-        # If not found, check with the elements swapped
         combination_id_reversed = f"{element2}_{element1}"
         combination_ref_reversed = db.collection('elements').document(combination_id_reversed)
         combination_doc_reversed = combination_ref_reversed.get()
@@ -48,15 +86,24 @@ def get_element_combination(element1, element2):
         if combination_doc_reversed.exists:
             return combination_doc_reversed.to_dict()
         
-        # If neither combination exists, print a message and return None
-        print(f"Combination {element1} + {element2} not found in either order.")
+        print(f"Combination {element1} + {element2} not found.")
         return None
     
     except Exception as e:
         print(f"Error retrieving combination: {e}")
         return None
 
-# Route to get an existing combination
+def generate_element_combination(element1, element2):
+    prompt = f"{element1} {element2}"
+    response = example_model.generate_content(
+        contents=[prompt],
+        generation_config=generation_config,
+        safety_settings=safety_settings,
+    )
+    result = response.text.strip()
+    add_element_combination(element1, element2, result)
+    return result
+
 @app.route('/get_combination', methods=['GET'])
 def get_combination():
     element1 = request.args.get('element1')
@@ -66,11 +113,13 @@ def get_combination():
         return jsonify({"error": "Missing element1 or element2"}), 400
     
     combination_data = get_element_combination(element1, element2)
+    
     if combination_data:
         return jsonify(combination_data)
     else:
-        return jsonify({"message": f"No combination found for {element1} + {element2}"}), 404
+        # Generate a new combination using the AI if it doesn't exist
+        ai_generated_result = generate_element_combination(element1, element2)
+        return jsonify({"element1": element1, "element2": element2, "result": ai_generated_result})
 
-# Run the Flask app
 if __name__ == '__main__':
     app.run(debug=True)
