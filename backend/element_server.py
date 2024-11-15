@@ -3,7 +3,6 @@ from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
-import re
 import vertexai
 from vertexai.generative_models import (
     GenerationConfig,
@@ -83,27 +82,6 @@ def add_element_combination(element1, element2, result):
     except Exception as e:
         print(f"Error adding combination: {e}")
 
-def get_existing_emoji(result_name):
-    """Check if a given result name exists in the database without focusing on the emoji."""
-    try:
-        elements_ref = db.collection('elements')
-        query = elements_ref.where('result', '>=', result_name).where('result', '<=', result_name + '\uf8ff')
-        docs = query.stream()
-
-        for doc in docs:
-            stored_result = doc.to_dict().get('result')
-            # Strip emojis from the stored result for comparison
-            stored_result_name = re.sub(r'[^\w\s]', '', stored_result).strip()
-            
-            if stored_result_name == result_name:
-                return stored_result  # Return the result with the existing emoji
-        
-        return None  # No matching result found in the database
-    
-    except Exception as e:
-        print(f"Error searching for existing emoji: {e}")
-        return None
-
 def get_element_combination(element1, element2):
     try:
         combination_id = f"{element1}_{element2}"
@@ -135,21 +113,8 @@ def generate_element_combination(element1, element2):
         safety_settings=safety_settings,
     )
     result = response.text.strip()
-    
-    # Remove emojis from AI result to check if it already exists
-    result_name_only = re.sub(r'[^\w\s]', '', result).strip()
-    existing_result_with_emoji = get_existing_emoji(result_name_only)
-    
-    # If an existing result with the desired name is found, use its emoji; otherwise, use the AI result
-    if existing_result_with_emoji:
-        final_result = existing_result_with_emoji
-        print(f"Existing result found for {result_name_only}, using stored result with emoji: {final_result}")
-    else:
-        final_result = result
-        print(f"New combination generated: {final_result}")
-    
-    add_element_combination(element1, element2, final_result)
-    return final_result
+    add_element_combination(element1, element2, result)
+    return result
 
 @app.route('/get_combination', methods=['GET'])
 def get_combination():
