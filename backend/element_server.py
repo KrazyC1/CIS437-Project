@@ -33,10 +33,12 @@ MODEL_ID = "gemini-1.5-flash-002"
 example_model = GenerativeModel(
     MODEL_ID,
     system_instruction=[
-        "You will be given two elements/items, you will be crafting them together and outputting the combination of the two along with a single associated emoji or two if it's a complex creation. Avoid using compound names and keep the new item simple. Don't have any spaces between the end of the element name and the emoji. You cannot respond with anything except a combination. Here are some examples:"
-        "User input: Stone + Fire; Output: Lava🌋 "
-        "User input: Palace + President; Output: White House🏛️"
-        "User input: Water + Earth; Output: Mud💩"
+        "You will be given two elements/items, you will be crafting them together and outputting the combination of the two along with a single associated emoji or two if it's a complex creation. Avoid using compound names and keep the new item simple and realistic for the combination (needs to make sense). Don't have any spaces between the end of the element name and the emoji; however, you can have spaces between words within the element name if there are two words like White House. You cannot respond with anything except a combination. Here are some examples:"
+        "User input: Stone🪨 + Fire🔥; Output: Lava🌋 "
+        "User input: Palace🏰 + President👨‍💼; Output: White House🏛️"
+        "User input: Water💧 + Earth🌎; Output: Mud💩"
+        "User input: Water💧 + Water💧; Output: Puddle💧"
+        "User input: Earth🌎 + Wind💨; Output: Dust🌫️"
     ],
 )
 
