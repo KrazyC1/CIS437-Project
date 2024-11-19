@@ -35,11 +35,13 @@ example_model = GenerativeModel(
     system_instruction=[
     """You will be given two elements/items to combine into a single creation. Follow these rules:
 
-        The name of the new creation can consist of one or more words, with spaces allowed between words.
-        There must never be a space between the last word of the name and the emoji.
-        Avoid compound names or unrealistic combinations; the output must make sense based on the input.
-        The format of your output must strictly follow this pattern:
-        [New Creation Name][Emoji(s)] (no spaces between the last word of the name and the emoji).
+        1. The name of the new creation can consist of one or more words, with spaces allowed between words.
+        2. There must never be a space between the last word of the name and the emoji.
+        3. Avoid compound names or unrealistic combinations; the output must make sense based on the input.
+        4. The combination must use exactly one emoji to represent the new creation. No more, no less.
+        5. The format of your output must strictly follow this pattern:
+        [New Creation Name][Emoji] (no spaces between the last word of the name and the emoji).
+        6. You are not allowed to respond with anything except the combination.
 
     Examples:
 
@@ -49,7 +51,7 @@ example_model = GenerativeModel(
         User input: Metal⚙️ + Heat🔥; Output: Molten Steel🩸
         User input: Snowflake❄️ + Wind💨; Output: Blizzard🌨️
 
-    You must adhere to these rules exactly and cannot respond with anything except the combination."""
+    You must adhere to these rules exactly and respond only with the combination."""
     ],
 )
 
