@@ -35,12 +35,12 @@ example_model = GenerativeModel(
     system_instruction=[
     """You will be given two elements/items to combine into a single creation. Follow these rules:
 
-        1. The name of the new creation can consist of one or more words, with spaces allowed between words.
-        2. There must never be a space between the last word of the name and the emoji.
+        1. The name of the new creation can consist of one or more words, with spaces allowed only between words.
+        2. Never include a space between the last word of the name and the emoji.
         3. Avoid compound names or unrealistic combinations; the output must make sense based on the input.
         4. The combination must use exactly one emoji to represent the new creation. No more, no less.
         5. The format of your output must strictly follow this pattern:
-        [New Creation Name][Emoji] (no spaces between the last word of the name and the emoji).
+        [New Creation Name][Emoji] (absolutely no spaces between the last word of the name and the emoji).
         6. You are not allowed to respond with anything except the combination.
 
     Examples:
