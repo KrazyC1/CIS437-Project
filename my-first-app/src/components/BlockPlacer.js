@@ -131,8 +131,8 @@ const BlockPlacer = () => {
     <div style={{ fontFamily: 'Arial, sans-serif', color: '#333', background: '#f5f5f5', padding: '20px', userSelect: 'none' }}>
       <div
         style={{
-          display: 'flex', overflowX: 'auto', padding: '10px', marginBottom: '15px',
-          backgroundColor: '#ddd', borderRadius: '8px', gap: '10px', alignItems: 'center'
+          display: 'flex', overflowX: 'auto', whiteSpace: 'nowrap', padding: '10px',
+          marginBottom: '15px', backgroundColor: '#ddd', borderRadius: '8px', gap: '10px'
         }}
       >
         {toolbarElements.map(element => (
@@ -140,8 +140,9 @@ const BlockPlacer = () => {
             key={element.text}
             onClick={() => addBlockAtRandomPosition(element)}
             style={{
-              padding: '10px 15px', borderRadius: '20px', backgroundColor: element.color,
-              color: 'white', fontWeight: 'bold', textAlign: 'center', cursor: 'pointer',
+              flex: '0 0 100px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: '8px', backgroundColor: element.color, color: 'white',
+              fontWeight: 'bold', textAlign: 'center', cursor: 'pointer',
               boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
             }}
           >
