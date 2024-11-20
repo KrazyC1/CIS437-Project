@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 const BlockPlacer = () => {
   const [blocks, setBlocks] = useState([]);
+  const [toolbarElements, setToolbarElements] = useState([]);
   const [draggedBlock, setDraggedBlock] = useState(null);
   const containerRef = useRef(null);
   const contextRef = useRef(null);
@@ -9,14 +10,16 @@ const BlockPlacer = () => {
   useEffect(() => {
     contextRef.current = document.createElement("canvas").getContext("2d");
     contextRef.current.font = "16px Arial";
-  }, []);
 
-  const labels = [
-    { text: "Water💧", color: "#0077ff" },
-    { text: "Fire🔥", color: "#ff4d4d" },
-    { text: "Wind💨", color: "#66cc66" },
-    { text: "Earth🌍", color: "#8b5e3c" }
-  ];
+    // Initialize toolbar with base elements
+    const labels = [
+      { text: "Water💧", color: "#0077ff" },
+      { text: "Fire🔥", color: "#ff4d4d" },
+      { text: "Wind💨", color: "#66cc66" },
+      { text: "Earth🌍", color: "#8b5e3c" }
+    ];
+    setToolbarElements(labels);
+  }, []);
 
   const hexToRgb = (hex) => ({
     r: parseInt(hex.slice(1, 3), 16),
@@ -51,7 +54,6 @@ const BlockPlacer = () => {
 
     try {
       const response = await fetch(
-        /*`http://homework4-440015.uk.r.appspot.com/get_combination?element1=${element1}&element2=${element2}`*/
         `http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`
       );
       const data = await response.json();
@@ -67,8 +69,15 @@ const BlockPlacer = () => {
       };
 
       setBlocks(blocks.filter(b => b.id !== draggedBlock.id && b.id !== targetBlock.id).concat(newBlock));
+      updateToolbar(newBlock.label);
     } catch (error) {
       console.error("Error fetching combination:", error);
+    }
+  };
+
+  const updateToolbar = (label) => {
+    if (!toolbarElements.some(e => e.text === label.text)) {
+      setToolbarElements([...toolbarElements, label]);
     }
   };
 
@@ -89,7 +98,8 @@ const BlockPlacer = () => {
       const x = Math.random() * (containerRef.current.offsetWidth - width) + width / 2;
       const y = Math.random() * (containerRef.current.offsetHeight - height) + height / 2;
       if (!blocks.some(b => Math.abs(b.x - x) < (b.width + width) / 2 && Math.abs(b.y - y) < (b.height + height) / 2)) {
-        setBlocks([...blocks, { x, y, id: Date.now(), label, width, height }]);
+        const newBlock = { x, y, id: Date.now(), label, width, height };
+        setBlocks([...blocks, newBlock]);
         break;
       }
     }
@@ -119,20 +129,23 @@ const BlockPlacer = () => {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', color: '#333', background: '#f5f5f5', padding: '20px', userSelect: 'none' }}>
-      <div style={{ display: 'flex', marginBottom: '15px', gap: '10px' }}>
-        {labels.map(label => (
+      <div
+        style={{
+          display: 'flex', overflowX: 'auto', padding: '10px', marginBottom: '15px',
+          backgroundColor: '#ddd', borderRadius: '8px', gap: '10px', alignItems: 'center'
+        }}
+      >
+        {toolbarElements.map(element => (
           <div
-            key={label.text}
-            onClick={() => addBlockAtRandomPosition(label)}
+            key={element.text}
+            onClick={() => addBlockAtRandomPosition(element)}
             style={{
-              padding: '10px 15px', borderRadius: '20px', backgroundColor: label.color,
-              cursor: 'pointer', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
-              color: 'white', fontWeight: 'bold', transition: 'transform 0.2s'
+              padding: '10px 15px', borderRadius: '20px', backgroundColor: element.color,
+              color: 'white', fontWeight: 'bold', textAlign: 'center', cursor: 'pointer',
+              boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
           >
-            {label.text}
+            {element.text}
           </div>
         ))}
       </div>
