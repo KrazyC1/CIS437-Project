@@ -81,10 +81,17 @@ const BlockPlacer = () => {
     }
   };
 
+  const clampPosition = (value, min, max) => Math.max(min, Math.min(value, max));
+
   const handleDragEnd = (e) => {
     if (!draggedBlock) return;
-    const { left, top } = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - left, y = e.clientY - top;
+    const { left, top, width: cw, height: ch } = containerRef.current.getBoundingClientRect();
+    let x = e.clientX - left, y = e.clientY - top;
+    const { width, height } = draggedBlock;
+
+    x = clampPosition(x, width / 2, cw - width / 2);
+    y = clampPosition(y, height / 2, ch - height / 2);
+
     const overlappingBlock = findOverlappingBlock(x, y, draggedBlock.id);
     overlappingBlock
       ? combineBlocks(x, y, overlappingBlock)
@@ -94,9 +101,10 @@ const BlockPlacer = () => {
 
   const addBlockAtRandomPosition = (label) => {
     const { width, height } = calculateBlockSize(label.text);
+    const { offsetWidth: cw, offsetHeight: ch } = containerRef.current;
     for (let i = 0; i < 100; i++) {
-      const x = Math.random() * (containerRef.current.offsetWidth - width) + width / 2;
-      const y = Math.random() * (containerRef.current.offsetHeight - height) + height / 2;
+      const x = Math.random() * (cw - width) + width / 2;
+      const y = Math.random() * (ch - height) + height / 2;
       if (!blocks.some(b => Math.abs(b.x - x) < (b.width + width) / 2 && Math.abs(b.y - y) < (b.height + height) / 2)) {
         const newBlock = { x, y, id: Date.now(), label, width, height };
         setBlocks([...blocks, newBlock]);
@@ -107,24 +115,18 @@ const BlockPlacer = () => {
 
   const handleMouseMove = (e) => {
     if (!draggedBlock) return;
-    const { left, top } = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - left, y = e.clientY - top;
+    const { left, top, width: cw, height: ch } = containerRef.current.getBoundingClientRect();
+    let x = e.clientX - left, y = e.clientY - top;
     const { width, height } = draggedBlock;
-    const { width: cw, height: ch } = containerRef.current.getBoundingClientRect();
-    if (x >= width / 2 && x <= cw - width / 2 && y >= height / 2 && y <= ch - height / 2) {
-      setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x, y } : b)));
-    }
+
+    x = clampPosition(x, width / 2, cw - width / 2);
+    y = clampPosition(y, height / 2, ch - height / 2);
+
+    setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x, y } : b)));
   };
 
-  const handleSubmitScore = () => {
-    fetch('https://cis437hw5.uk.r.appspot.com/submit-score', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ score: blocks.length }),
-    })
-    .then(res => res.json())
-    .then(data => console.log('Score submitted:', data))
-    .catch(error => console.error('Submission error:', error));
+  const clearBlocks = () => {
+    setBlocks([]);
   };
 
   return (
@@ -178,22 +180,29 @@ const BlockPlacer = () => {
             {block.label.text}
           </div>
         ))}
-        <div style={{ position: 'absolute', bottom: '10px', right: '10px', color: '#666' }}>
-          Blocks placed: {blocks.length}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '10px',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: '#ff4d4d',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+            color: 'white',
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }}
+          onClick={clearBlocks}
+        >
+          🗑️
         </div>
       </div>
-      <button
-        style={{
-          marginTop: '20px', padding: '12px 25px', fontSize: '16px', borderRadius: '8px',
-          backgroundColor: '#28a745', color: 'white', fontWeight: 'bold', border: 'none', cursor: 'pointer',
-          boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)', transition: 'background-color 0.3s'
-        }}
-        onClick={handleSubmitScore}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#218838'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#28a745'}
-      >
-        SUBMIT SCORE
-      </button>
     </div>
   );
 };
