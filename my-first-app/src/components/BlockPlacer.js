@@ -11,7 +11,6 @@ const BlockPlacer = () => {
     contextRef.current = document.createElement("canvas").getContext("2d");
     contextRef.current.font = "16px Arial";
 
-    // Initialize toolbar with base elements
     const labels = [
       { text: "Water💧", color: "#0077ff" },
       { text: "Fire🔥", color: "#ff4d4d" },
@@ -54,7 +53,6 @@ const BlockPlacer = () => {
 
     try {
       const response = await fetch(
-        //`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`
         `https://homework4-440015.uk.r.appspot.com/get_combination?element1=${element1}&element2=${element2}`
       );
       const data = await response.json();
@@ -84,10 +82,42 @@ const BlockPlacer = () => {
 
   const clampPosition = (value, min, max) => Math.max(min, Math.min(value, max));
 
+  const getEventCoordinates = (e) => {
+    const isTouchEvent = e.touches !== undefined;
+    const clientX = isTouchEvent ? e.touches[0].clientX : e.clientX;
+    const clientY = isTouchEvent ? e.touches[0].clientY : e.clientY;
+    return { clientX, clientY };
+  };
+
+  const handleDragStart = (block, e) => {
+    e.stopPropagation();
+    // Prevent default to stop text selection and scrolling
+    e.preventDefault();
+    setDraggedBlock(block);
+  };
+
+  const handleDragMove = (e) => {
+    if (!draggedBlock) return;
+    e.preventDefault();
+
+    const { clientX, clientY } = getEventCoordinates(e);
+    const { left, top, width: cw, height: ch } = containerRef.current.getBoundingClientRect();
+    let x = clientX - left, y = clientY - top;
+    const { width, height } = draggedBlock;
+
+    x = clampPosition(x, width / 2, cw - width / 2);
+    y = clampPosition(y, height / 2, ch - height / 2);
+
+    setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x, y } : b)));
+  };
+
   const handleDragEnd = (e) => {
     if (!draggedBlock) return;
+    e.preventDefault();
+
+    const { clientX, clientY } = getEventCoordinates(e);
     const { left, top, width: cw, height: ch } = containerRef.current.getBoundingClientRect();
-    let x = e.clientX - left, y = e.clientY - top;
+    let x = clientX - left, y = clientY - top;
     const { width, height } = draggedBlock;
 
     x = clampPosition(x, width / 2, cw - width / 2);
@@ -112,18 +142,6 @@ const BlockPlacer = () => {
         break;
       }
     }
-  };
-
-  const handleMouseMove = (e) => {
-    if (!draggedBlock) return;
-    const { left, top, width: cw, height: ch } = containerRef.current.getBoundingClientRect();
-    let x = e.clientX - left, y = e.clientY - top;
-    const { width, height } = draggedBlock;
-
-    x = clampPosition(x, width / 2, cw - width / 2);
-    y = clampPosition(y, height / 2, ch - height / 2);
-
-    setBlocks(blocks.map(b => (b.id === draggedBlock.id ? { ...b, x, y } : b)));
   };
 
   const clearBlocks = () => {
@@ -160,9 +178,12 @@ const BlockPlacer = () => {
           backgroundColor: '#ffffff', overflow: 'hidden', boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.2)',
           cursor: draggedBlock ? 'grabbing' : 'crosshair', userSelect: 'none'
         }}
-        onMouseMove={handleMouseMove}
+        onMouseMove={handleDragMove}
         onMouseUp={handleDragEnd}
         onMouseLeave={handleDragEnd}
+        onTouchMove={handleDragMove}
+        onTouchEnd={handleDragEnd}
+        onTouchCancel={handleDragEnd}
       >
         {blocks.map(block => (
           <div
@@ -174,7 +195,8 @@ const BlockPlacer = () => {
               justifyContent: 'center', fontWeight: 'bold', boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.15)',
               cursor: 'grab', userSelect: 'none', transition: 'transform 0.2s'
             }}
-            onMouseDown={(e) => { e.stopPropagation(); setDraggedBlock(block); }}
+            onMouseDown={(e) => handleDragStart(block, e)}
+            onTouchStart={(e) => handleDragStart(block, e)}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1.0)'}
           >
