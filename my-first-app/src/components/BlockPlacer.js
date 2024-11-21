@@ -54,7 +54,8 @@ const BlockPlacer = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`
+        //`http://localhost:5000/get_combination?element1=${element1}&element2=${element2}`
+        `https://homework4-440015.uk.r.appspot.com/get_combination?element1=${element1}&element2=${element2}`
       );
       const data = await response.json();
 
