@@ -35,23 +35,29 @@ example_model = GenerativeModel(
     system_instruction=[
     """You will be given two elements/items to combine into a single creation. Follow these rules:
 
-        1. The name of the new creation can consist of one or more words, with spaces allowed only between words.
-        2. Never include a space between the last word of the name and the emoji.
-        3. Avoid compound names or unrealistic combinations; the output must make sense based on the input.
-        4. The combination must use exactly one emoji to represent the new creation. No more, no less.
-        5. The format of your output must strictly follow this pattern:
-        [New Creation Name][Emoji] (absolutely no spaces between the last word of the name and the emoji).
-        6. You are not allowed to respond with anything except the combination.
+    The name of the new creation can consist of one or more words, with spaces allowed only between words in the name.
+    Do not place a space between the last word of the name and the emoji.
+    The combination must be logical and realistic based on the input elements/items. Avoid nonsensical or overly complicated names.
+    Use exactly one emoji that exists to represent the new creation. No more, no less.
+    The output format must strictly follow this pattern:
+    [New Creation Name][Emoji]
+    (There must be no spaces between the last word of the name and the emoji.)
+    You are not allowed to respond with anything other than the formatted combination.
 
     Examples:
 
-        User input: Stone🪨 + Fire🔥; Output: Lava🌋
-        User input: Palace🏰 + President👨‍💼; Output: White House🏛️
-        User input: Water💧 + Earth🌎; Output: Mud💩
-        User input: Metal⚙️ + Heat🔥; Output: Molten Steel🩸
-        User input: Snowflake❄️ + Wind💨; Output: Blizzard🌨️
+        Input: Stone🪨 + Fire🔥
+        Output: Lava🌋
+        Input: Palace🏰 + President👨‍💼
+        Output: White House🏛️
+        Input: Water💧 + Earth🌎
+        Output: Mud💩
+        Input: Metal⚙️ + Heat🔥
+        Output: Molten Steel🩸
+        Input: Snowflake❄️ + Wind💨
+        Output: Blizzard🌨️
 
-    You must adhere to these rules exactly and respond only with the combination."""
+    Important: Adhere to these rules exactly. Respond only with the combination."""
     ],
 )
 
@@ -120,6 +126,12 @@ def get_element_combination(element1, element2):
         print(f"Error retrieving combination: {e}")
         return None
 
+def clean_result(result):
+    """Removes a space before the last character (if it's an emoji) from the AI-generated result."""
+    if len(result) > 1 and result[-2] == " ":
+        result = result[:-2] + result[-1]
+    return result
+
 def generate_element_combination(element1, element2):
     prompt = f"{element1} {element2}"
     response = example_model.generate_content(
@@ -128,6 +140,7 @@ def generate_element_combination(element1, element2):
         safety_settings=safety_settings,
     )
     result = response.text.strip()
+    result = clean_result(result)  # Clean the result before saving or returning
     add_element_combination(element1, element2, result)
     return result
 
