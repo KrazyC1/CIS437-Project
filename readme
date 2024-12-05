@@ -24,3 +24,8 @@ How to setup/install/run the project: simply go to
 https://project-front-end-567481301556.northamerica-northeast2.run.app/ and give it some
 time for the first time you visit the website, and the first time that you combine two 
 elements since it partially does a cold start.
+
+Front end location:
+my-first-app/src/components/BlockPlacer.js
+
+Back end location:
