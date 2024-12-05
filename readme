@@ -25,8 +25,8 @@ https://project-front-end-567481301556.northamerica-northeast2.run.app/ and give
 time for the first time you visit the website, and the first time that you combine two 
 elements since it partially does a cold start.
 
-Front end location:
+Front end location (cloud run):
 my-first-app/src/components/BlockPlacer.js
 
-Back end location:
+Back end location (app engine):
 backend/element_server.py
