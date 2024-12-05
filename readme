@@ -1,1 +1,26 @@
-This was done for my cloud computing project
+Essentia, by Clayton Wenzel and Nathan Eberly
+
+What this project is: A website game where you are given a list of 4 elements, and from 
+there you can combine them within a box to get infinite new elements and creations, ranging 
+from a Nuclear Reactor to a Rotten Fish and every single thing between. It uses a FireStore
+Database to see if the combination of elements already exists, and if not it reaches out
+to a Vertex AI API and gives it a very specific prompt to get back a combination of the 
+two items.
+
+Which cloud services are used: Vertex AI, Google Firestore Database, App Engine, and Cloud Run.
+
+How the services interact with each other: When you go to the link for the website, you are
+accessing the cloud run function which handles all of the javascript and front end reaching
+to the backend which is coded in Python. From there, the backend has code for a few things: 
+the user tries to combine two elements in the website, and it sends a request with those two 
+items to the firestore database. If a combination is found within the database, the backend 
+returns that result to the front. If a combination is not found, it sends a request to a Vertex 
+AI bot with a very long and specific prompt, essentially saying to combine those two items 
+and return the name of the combined item and then an emoji following it that connects to the 
+item. When this happens, it saves the new combination and item into the firestore database for 
+later and quicker retrieval.
+
+How to setup/install/run the project: simply go to 
+https://project-front-end-567481301556.northamerica-northeast2.run.app/ and give it some
+time for the first time you visit the website, and the first time that you combine two 
+elements since it partially does a cold start.
